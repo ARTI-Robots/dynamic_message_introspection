@@ -18,6 +18,9 @@
 
 #include <utility>
 #include <string>
+#include <vector>
+
+#include <boost/type_index.hpp>
 
 #include "rcutils/allocator.h"
 #include "rosidl_typesupport_introspection_c/message_introspection.h"
@@ -114,11 +117,86 @@ void ros_message_destroy_with_allocator(RosMessage * ros_msg, rcutils_allocator_
 namespace cpp
 {
 
+// Split a fully-qualified type name into its components at "::"
+inline std::vector<std::string> split_namespace(const std::string & input)
+{
+  std::vector<std::string> parts;
+  size_t pos = 0;
+
+  while (true) {
+    size_t next = input.find("::", pos);
+    if (next == std::string::npos) {
+      parts.emplace_back(input.substr(pos));
+      break;
+    }
+    parts.emplace_back(input.substr(pos, next - pos));
+    pos = next + 2;  // skip "::"
+  }
+  return parts;
+}
+
+inline std::string remove_ros_msg_name_template_suffix(const std::string & input)
+{
+  // an example input is std_msgs::msg::String_<std::allocator<void> >
+  // and the output should be std_msgs::msg::String
+
+  // find the last '>' character, search for the before matching '<' character
+  // and remove everything in between
+  size_t end_pos = input.rfind('>');
+  if (end_pos == std::string::npos) {
+    // no template suffix found
+    return input;
+  }
+  int level_count = 1;
+  size_t begin_pos = end_pos;
+  for (int i = static_cast<int>(end_pos) - 1; i >= 0; i--) {
+    if (input[i] == '>') {
+      level_count++;
+    } else if (input[i] == '<') {
+      level_count--;
+      if (level_count == 0) {
+        // found the matching '<'
+        begin_pos = i;
+      }
+    }
+  }
+
+  // -1 because we also need to remove the '_' before the first '<'
+  std::string ret = input.substr(0, begin_pos - 1);
+  if (end_pos < (input.size() - 1)) {
+    ret += input.substr(end_pos + 1);
+  }
+
+  return ret;
+}
+
 /// C++ version of dynmsg::c::get_type_info()
 /**
  * \see dynmsg::c::get_type_info()
  */
 const TypeInfo_Cpp * get_type_info(const InterfaceTypeName & interface_type);
+
+template<class T>
+const TypeInfo_Cpp * get_type_info()
+{
+  std::string full_ros_msg_type = boost::typeindex::type_id<T>().pretty_name();
+
+  std::string cleaned_ros_msg_type = remove_ros_msg_name_template_suffix(full_ros_msg_type);
+
+  auto parts = split_namespace(cleaned_ros_msg_type);
+
+  if (parts.size() < 2) {
+    // Invalid type name
+    return nullptr;
+  }
+
+  std::string package_name = parts.front();
+  std::string message_name = parts.back();
+
+  InterfaceTypeName interface{package_name, message_name};
+
+  return get_type_info(interface);
+}
 
 /// C++ version of dynmsg::c::ros_message_with_typeinfo_init()
 /**

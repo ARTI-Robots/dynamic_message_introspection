@@ -16,6 +16,8 @@
 #ifndef DYNMSG__MSG_PARSER_HPP_
 #define DYNMSG__MSG_PARSER_HPP_
 
+#include <yaml-cpp/yaml.h>
+
 #include <string>
 
 #include "rcutils/allocator.h"
@@ -80,6 +82,33 @@ void yaml_and_typeinfo_to_rosmsg(
   const TypeInfo_Cpp * type_info,
   const std::string & yaml_str,
   void * ros_message);
+
+void yaml_and_typeinfo_to_rosmsg(
+  const TypeInfo_Cpp * type_info,
+  const YAML::Node & yaml_node,
+  void * ros_message);
+
+template<class T>
+T yaml_and_typeinfo_to_rosmsg(
+  const YAML::Node & yaml_node)
+{
+  T msg_from_yaml;
+  void * ros_message = reinterpret_cast<void *>(&msg_from_yaml);
+  dynmsg::cpp::yaml_and_typeinfo_to_rosmsg(
+    dynmsg::cpp::get_type_info<T>(), yaml_node, ros_message);
+  return msg_from_yaml;
+}
+
+template<class T>
+T yaml_and_typeinfo_to_rosmsg(
+  const std::string & yaml_str)
+{
+  // Parse the YAML representation to an in-memory representation
+  YAML::Node root = YAML::Load(yaml_str);
+
+  return yaml_and_typeinfo_to_rosmsg<T>(root);
+}
+
 
 }  // namespace cpp
 

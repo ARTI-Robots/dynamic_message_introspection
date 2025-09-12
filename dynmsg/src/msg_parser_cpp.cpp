@@ -586,9 +586,18 @@ void yaml_and_typeinfo_to_rosmsg(
 {
   // Parse the YAML representation to an in-memory representation
   YAML::Node root = YAML::Load(yaml_str);
+
+  yaml_and_typeinfo_to_rosmsg(type_info, root, ros_message);
+}
+
+void yaml_and_typeinfo_to_rosmsg(
+  const TypeInfo_Cpp * type_info,
+  const YAML::Node & yaml_node,
+  void * ros_message)
+{
   // Convert the YAML representation to a binary representation
   uint8_t * buffer = reinterpret_cast<uint8_t *>(ros_message);
-  impl::yaml_to_rosmsg_impl(root, type_info, buffer);
+  impl::yaml_to_rosmsg_impl(yaml_node, type_info, buffer);
 }
 
 RosMessage_Cpp yaml_and_typeinfo_to_rosmsg(

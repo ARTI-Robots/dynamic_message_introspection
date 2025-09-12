@@ -34,12 +34,7 @@ int main()
   msg.stamp = stamp;
 
   // Convert it into a YAML representation
-  RosMessage_Cpp ros_msg;
-  // Note: type support info could be retrieved through other means, see dynmsg::cpp::*
-  InterfaceTypeName interface{"std_msgs", "Header"};
-  ros_msg.type_info = dynmsg::cpp::get_type_info(interface);
-  ros_msg.data = reinterpret_cast<uint8_t *>(&msg);
-  YAML::Node yaml_msg = dynmsg::cpp::message_to_yaml(ros_msg);
+  YAML::Node yaml_msg = dynmsg::cpp::message_to_yaml(msg);
 
   // Convert the YAML representation to a string
   const std::string yaml_string = dynmsg::yaml_to_string(yaml_msg);
@@ -53,9 +48,8 @@ int main()
   printf("\n");
 
   // Convert YAML string back to a ROS 2 message
-  std_msgs::msg::Header msg_from_yaml;
-  void * ros_message = reinterpret_cast<void *>(&msg_from_yaml);
-  dynmsg::cpp::yaml_and_typeinfo_to_rosmsg(ros_msg.type_info, yaml_string, ros_message);
+  std_msgs::msg::Header msg_from_yaml =
+    dynmsg::cpp::yaml_and_typeinfo_to_rosmsg<std_msgs::msg::Header>(yaml_string);
   // Prints:
   //   my_frame
   //   4 s, 20 ns

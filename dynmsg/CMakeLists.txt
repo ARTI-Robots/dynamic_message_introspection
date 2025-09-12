@@ -26,6 +26,11 @@ find_package(rosidl_typesupport_introspection_c REQUIRED)
 find_package(rosidl_typesupport_introspection_cpp REQUIRED)
 find_package(yaml_cpp_vendor REQUIRED)
 
+# workaround to get Boost propagated properly
+# see https://robotics.stackexchange.com/questions/93010/ament-export-dependenciesboost-not-working
+# and https://gist.github.com/tylerjw/ce3bcb94b3df7996e450dec18ee54cde
+include(ConfigExtras.cmake)
+
 # See config.hpp.in
 option(DYNMSG_VALUE_ONLY "Write message member value directly instead default+value" ON)
 option(DYNMSG_YAML_CPP_BAD_INT8_HANDLING "Work around buggy [u]int8_t handling by yaml-cpp" ON)
@@ -49,6 +54,7 @@ ament_target_dependencies(dynmsg
   rosidl_typesupport_introspection_c
   rosidl_typesupport_introspection_cpp
   yaml_cpp_vendor
+  Boost
 )
 target_include_directories(dynmsg PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
@@ -64,6 +70,7 @@ ament_export_dependencies(rosidl_runtime_cpp)
 ament_export_dependencies(rosidl_typesupport_introspection_c)
 ament_export_dependencies(rosidl_typesupport_introspection_cpp)
 ament_export_dependencies(yaml_cpp_vendor)
+ament_export_dependencies(Boost)
 
 install(
   DIRECTORY include/ ${CMAKE_CURRENT_BINARY_DIR}/include/
@@ -81,6 +88,9 @@ install(
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
+  set(AMENT_LINT_AUTO_FILE_EXCLUDE
+    "ConfigExtras.cmake"
+  )
   ament_lint_auto_find_test_dependencies()
 
   find_package(ament_cmake_gtest REQUIRED)
@@ -97,4 +107,4 @@ if(BUILD_TESTING)
   ament_target_dependencies(test_typesupport std_msgs)
 endif()
 
-ament_package()
+ament_package(CONFIG_EXTRAS ConfigExtras.cmake)

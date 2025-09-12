@@ -52,6 +52,15 @@ namespace cpp
  */
 YAML::Node message_to_yaml(const RosMessage_Cpp & message);
 
+template<class T>
+YAML::Node message_to_yaml(const T & message)
+{
+  RosMessage_Cpp ros_msg;
+  ros_msg.type_info = dynmsg::cpp::get_type_info<T>();
+  ros_msg.data = reinterpret_cast<uint8_t *>(const_cast<T *>(&message));
+  return message_to_yaml(ros_msg);
+}
+
 }  // namespace cpp
 
 }  // namespace dynmsg
