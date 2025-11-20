@@ -89,7 +89,7 @@ void yaml_and_typeinfo_to_rosmsg(
   void * ros_message);
 
 template<class T>
-T yaml_and_typeinfo_to_rosmsg(
+T yaml_to_rosmsg(
   const YAML::Node & yaml_node)
 {
   T msg_from_yaml;
@@ -100,13 +100,13 @@ T yaml_and_typeinfo_to_rosmsg(
 }
 
 template<class T>
-T yaml_and_typeinfo_to_rosmsg(
+T yaml_to_rosmsg(
   const std::string & yaml_str)
 {
   // Parse the YAML representation to an in-memory representation
   YAML::Node root = YAML::Load(yaml_str);
 
-  return yaml_and_typeinfo_to_rosmsg<T>(root);
+  return yaml_to_rosmsg<T>(root);
 }
 
 

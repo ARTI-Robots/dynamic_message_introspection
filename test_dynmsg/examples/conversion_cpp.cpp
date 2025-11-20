@@ -49,7 +49,7 @@ int main()
 
   // Convert YAML string back to a ROS 2 message
   std_msgs::msg::Header msg_from_yaml =
-    dynmsg::cpp::yaml_and_typeinfo_to_rosmsg<std_msgs::msg::Header>(yaml_string);
+    dynmsg::cpp::yaml_to_rosmsg<std_msgs::msg::Header>(yaml_string);
   // Prints:
   //   my_frame
   //   4 s, 20 ns
